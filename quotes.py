@@ -28,7 +28,8 @@ class Quotes(commands.Cog):
         })
 
         self.quotes = db.reference("quotes").get()
-        await ctx.send("Quote added!")
+        await ctx.send(f"{ctx.message.author.mention} Quote added!")
+        await ctx.message.delete()
 
 
 def setup(bot: commands.Bot):
