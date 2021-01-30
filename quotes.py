@@ -41,6 +41,5 @@ class Quotes(commands.Cog):
 
 
 def setup(bot: commands.Bot):
-    bot.remove_command("help")
     bot.add_cog(Quotes(bot))
 
