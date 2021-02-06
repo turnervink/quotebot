@@ -15,7 +15,7 @@ class Quotes(commands.Cog):
     async def get_quote(self, ctx):
         quote = self.quotes[random.choice(list(self.quotes.keys()))]
         embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
-                              description=f"- {quote['author']}, {quote['year']}")
+                              description=f"- {quote['author']} | {quote['year']}")
 
         await ctx.send(embed=embed)
 
