@@ -13,8 +13,11 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         channel = await bot.fetch_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
         print(message.content)
-    else:
-        print("Not match")
+        # TODO
+        # - Get current date
+        # - Get author name from username
+        #   - In database, key is user ID, value is author name (manually register, maybe command to do so?)
+        #     - Default can just be their display name
 
 
 @bot.event
