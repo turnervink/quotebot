@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from db import db
+import db
 
 import random
 
@@ -9,25 +9,20 @@ import random
 class Quotes(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.quotes = db.reference("quotes").get()
+        self.quotes = db.get_quotes()
 
     @commands.command(name="quote")
     async def get_quote(self, ctx):
         quote = self.quotes[random.choice(list(self.quotes.keys()))]
         embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
-                              description=f"- {quote['author']} | {quote['year']}")
+                              description=f"- {quote['author']} | {quote['date']}")
 
         await ctx.send(embed=embed)
 
     @commands.command(name="addquote")
-    async def add_quote(self, ctx, quote: str, author: str, year: str):
-        db.reference("quotes").push({
-            "quote": quote,
-            "author": author,
-            "year": year
-        })
-
-        self.quotes = db.reference("quotes").get()
+    async def add_quote(self, ctx, quote: str, author: str, date: str):
+        db.push_quote(quote, author, date)
+        self.quotes = db.get_quotes()
         await ctx.send(f"{ctx.message.author.mention} Quote added!")
         await ctx.message.delete()
 

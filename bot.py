@@ -3,6 +3,9 @@ from discord.ext import commands
 
 import os
 
+import db
+import util
+
 
 bot = commands.Bot(command_prefix="$")
 
@@ -10,14 +13,16 @@ bot = commands.Bot(command_prefix="$")
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if str(payload.emoji) == "📇":
-        channel = await bot.fetch_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-        print(message.content)
-        # TODO
-        # - Get current date
-        # - Get author name from username
-        #   - In database, key is user ID, value is author name (manually register, maybe command to do so?)
-        #     - Default can just be their display name
+        channel: discord.TextChannel = await bot.fetch_channel(payload.channel_id)
+        message: discord.Message = await channel.fetch_message(payload.message_id)
+        author = db.get_author(message.author)
+        message_date_str = util.get_quote_date(message)
+
+        if author is None:
+            author = message.author.name
+
+        db.add_quote(str(message.id), message.content, author, message_date_str)
+        await channel.send(f"{message.author.mention} Quote added!")
 
 
 @bot.event
