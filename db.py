@@ -37,4 +37,3 @@ def push_quote(quote: str, author: str, date: str):
 
 def get_author(member: discord.Member):
     return db.child("authors").child(str(member.id)).get()
-    # TODO Look up from authors node for up-to-date name
