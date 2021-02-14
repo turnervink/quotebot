@@ -12,15 +12,15 @@ default_app = firebase_admin.initialize_app(cred, {
     }
 })
 
-db = db.reference(os.environ["DB_ROOT"])
+db_root = db.reference(os.environ["DB_ROOT"])
 
 
 def get_quotes():
-    return db.child("quotes").get()
+    return db_root.child("quotes").get()
 
 
 def add_quote(message_id: str, quote: str, author: str, date: str):
-    db.child("quotes").child(message_id).set({
+    db_root.child("quotes").child(message_id).set({
         "quote": quote,
         "author": author,
         "date": date
@@ -28,7 +28,7 @@ def add_quote(message_id: str, quote: str, author: str, date: str):
 
 
 def push_quote(quote: str, author: str, date: str):
-    db.child("quotes").push({
+    db_root.child("quotes").push({
         "quote": quote,
         "author": author,
         "date": date
@@ -36,4 +36,4 @@ def push_quote(quote: str, author: str, date: str):
 
 
 def get_author(member: discord.Member):
-    return db.child("authors").child(str(member.id)).get()
+    return db_root.child("authors").child(str(member.id)).get()
