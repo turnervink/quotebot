@@ -3,18 +3,18 @@ from discord.ext import commands, tasks
 
 import random
 
-from db import db
+import db
 
 
 class Status(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.quotes = db.reference("quotes").get()
+        self.quotes = db.get_quotes()
         self.update_status.start()
 
     @tasks.loop(hours=6)
     async def update_status(self):
-        self.quotes = db.reference("quotes").get()
+        self.quotes = db.get_quotes()
         quote = self.quotes[random.choice(list(self.quotes.keys()))]
 
         text = quote["quote"]
