@@ -23,7 +23,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
             author = message.author.name
 
         db.add_quote(str(message.id), message.content, author, message_date_str)
-        await channel.send(f"{message.author.mention} Quote added!")
+        await channel.send(f"{payload.member.mention} Quote added!")
 
 
 @bot.event
