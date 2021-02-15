@@ -28,6 +28,7 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 
 @bot.event
 async def on_ready():
+    bot.load_extension("backup")
     bot.load_extension("status")
 
     bot.remove_command("help")
