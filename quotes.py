@@ -4,7 +4,18 @@ from discord.ext import commands
 import db
 
 from datetime import datetime, timedelta
+import os
 import random
+
+# How long the cooldown period is
+COOLDOWN_PERIOD_SECONDS = int(os.environ["COOLDOWN_PERIOD_SECONDS"])
+
+# The number of times a user can issue the get quote command within the penalty window before hitting a cooldown
+MAX_GET_QUOTE_INVOCATIONS_BEFORE_COOLDOWN = int(os.environ["MAX_GET_QUOTE_INVOCATIONS_BEFORE_COOLDOWN"])
+
+# If a user issues the get quote command again within this period they get one invocation closer to a cooldown
+# If they wait longer than this period their invocations reset to 1
+GET_QUOTE_PENALTY_WINDOW_SECONDS = int(os.environ["GET_QUOTE_PENALTY_WINDOW_SECONDS"])
 
 
 class Quotes(commands.Cog):
@@ -23,24 +34,43 @@ class Quotes(commands.Cog):
         except KeyError:
             return False
 
+    def start_cooldown(self, user: discord.User):
+        self.cooldowns[user.id] = datetime.now() + timedelta(seconds=COOLDOWN_PERIOD_SECONDS)
+        self.invocations[user.id]["count"] = 0
+
     @commands.command(name="quote")
     async def get_quote(self, ctx):
         if self.user_is_in_cooldown(ctx.message.author):
-            await ctx.send(f"You're doing that too much {ctx.message.author.mention}! Try again later.")
-        else:
-            quote = self.quotes[random.choice(list(self.quotes.keys()))]
-            embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
-                                  description=f"- {quote['author']} | {quote['date']}")
-            await ctx.send(embed=embed)
+            await ctx.send(f"You're doing that too much {ctx.message.author.mention}! Try again in a bit.")
+            return
 
-            user_num_invocations = self.invocations.get(ctx.message.author.id)
-            if user_num_invocations is None:
-                self.invocations[ctx.message.author.id] = 1
-            elif user_num_invocations == 2:  # This is the user's 3rd invocation since their last cooldown
-                self.cooldowns[ctx.message.author.id] = datetime.now() + timedelta(minutes=3)
-                self.invocations[ctx.message.author.id] = 0
+        try:
+            user_invocation_count = self.invocations[ctx.message.author.id]["count"]
+            user_last_invocation_time = self.invocations[ctx.message.author.id]["last_invocation"]
+
+            if user_invocation_count == MAX_GET_QUOTE_INVOCATIONS_BEFORE_COOLDOWN and\
+                    datetime.now() - user_last_invocation_time < timedelta(seconds=GET_QUOTE_PENALTY_WINDOW_SECONDS):
+                self.start_cooldown(ctx.message.author)
+                self.invocations[ctx.message.author.id]["last_invocation"] = datetime.now()
+                await ctx.send(f"You're doing that too much {ctx.message.author.mention}! Try again in a bit.")
+                return
             else:
-                self.invocations[ctx.message.author.id] = user_num_invocations + 1
+                if datetime.now() - user_last_invocation_time < timedelta(seconds=GET_QUOTE_PENALTY_WINDOW_SECONDS):
+                    self.invocations[ctx.message.author.id]["count"] = user_invocation_count + 1
+                else:
+                    self.invocations[ctx.message.author.id]["count"] = 1
+
+                self.invocations[ctx.message.author.id]["last_invocation"] = datetime.now()
+        except KeyError:
+            self.invocations[ctx.message.author.id] = {
+                "count": 1,
+                "last_invocation": datetime.now()
+            }
+
+        quote = self.quotes[random.choice(list(self.quotes.keys()))]
+        embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
+                              description=f"- {quote['author']} | {quote['date']}")
+        await ctx.send(embed=embed)
 
     @commands.command(name="addquote")
     async def add_quote(self, ctx, quote: str, author: str, date: str):
