@@ -17,6 +17,16 @@ MAX_GET_QUOTE_INVOCATIONS_BEFORE_COOLDOWN = int(os.environ["MAX_GET_QUOTE_INVOCA
 # If they wait longer than this period their invocations reset to 1
 GET_QUOTE_PENALTY_WINDOW_SECONDS = int(os.environ["GET_QUOTE_PENALTY_WINDOW_SECONDS"])
 
+GAMER_COMPOUND_SPONSOR_NAMES = [
+    "Totino's Pizza Rolls",
+    "CashApp",
+    "The Washington Post",
+    "Comcast",
+    "The United States Air Force",
+    "Funko Pop!",
+    "The History Channel"
+]
+
 
 class Quotes(commands.Cog):
     def __init__(self, bot):
@@ -68,8 +78,9 @@ class Quotes(commands.Cog):
             }
 
         quote = self.quotes[random.choice(list(self.quotes.keys()))]
+        sponsor = f"THIS EPIC GAMER QUOTE WAS BROUGHT TO YOU BY {(random.choice(GAMER_COMPOUND_SPONSOR_NAMES)).upper()}"
         embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
-                              description=f"- {quote['author']} | {quote['date']}")
+                              description=f"- {quote['author']} | {quote['date']}\n\n{sponsor}")
         await ctx.send(embed=embed)
 
     @commands.command(name="addquote")
