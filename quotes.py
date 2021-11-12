@@ -72,12 +72,38 @@ class Quotes(commands.Cog):
                               description=f"- {quote['author']} | {quote['date']}")
         await ctx.send(embed=embed)
 
+    @commands.command(name="search")
+    async def search_for_quote(self, ctx, contents_substr: str, author: str = None):
+        quotes = []
+
+        for key in self.quotes.keys():
+            if author is not None:
+                if self.quotes[key]["author"].lower() == author:
+                    quotes.append(self.quotes[key])
+            else:
+                quotes.append(self.quotes[key])
+
+        matching_quotes = [quote for quote in quotes if contents_substr.lower() in quote["quote"].lower()]
+
+        results_list = ""
+        for quote in matching_quotes:
+            results_list += f"\"{quote['quote']}\" - {quote['author']}, {quote['date']}\n\n"
+
+        embed = discord.Embed(title="Search results", colour=discord.Colour(0x9013fe),
+                              description=results_list)
+        await ctx.send(embed=embed)
+
     @commands.command(name="addquote")
     async def add_quote(self, ctx, quote: str, author: str, date: str):
         db.push_quote(quote, author, date)
         self.quotes = db.get_quotes()
         await ctx.send(f"{ctx.message.author.mention} Quote added!")
         await ctx.message.delete()
+
+    @commands.command(name="refresh")
+    async def refresh_cached_quotes(self, ctx):
+        self.quotes = db.get_quotes()
+        await ctx.send("Quotes refreshed!")
 
     @commands.command(name="help")
     async def help(self, ctx):
