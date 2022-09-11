@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import bridge
 
 import os
 
@@ -8,13 +8,13 @@ import util
 
 
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="$", intents=intents)
+bot = bridge.Bot(debug_guilds=["339533012725268480"], command_prefix="$", intents=intents)
 
 
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     if str(payload.emoji) == "📇":
-        channel: discord.TextChannel = await bot.fetch_channel(payload.channel_id)
+        channel = bot.get_channel(payload.channel_id)
         message: discord.Message = await channel.fetch_message(payload.message_id)
         author = db.get_author(message.author)
         message_date_str = util.get_quote_date(message)

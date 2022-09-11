@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, bridge
 
 import db
 
@@ -38,8 +38,10 @@ class Quotes(commands.Cog):
         self.cooldowns[user.id] = datetime.now() + timedelta(seconds=COOLDOWN_PERIOD_SECONDS)
         self.invocations[user.id]["count"] = 0
 
-    @commands.command(name="quote")
+    @bridge.bridge_command(name="quote")
     async def get_quote(self, ctx):
+        print('get_quote')
+
         if self.user_is_in_cooldown(ctx.message.author):
             await ctx.send(f"You're doing that too much {ctx.message.author.mention}! Try again in a bit.")
             return
