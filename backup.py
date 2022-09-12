@@ -20,11 +20,11 @@ class Backup(commands.Cog):
         self.bot = bot
         self.scheduled_backup.start()
 
-    @commands.command(name="backup")
+    @commands.slash_command(name="backup", description="Run a database backup")
     async def backup_quotes(self, ctx):
         quotes = db.get_quotes()
         do_backup(quotes)
-        await ctx.send(f"{ctx.message.author.mention} Backup created!")
+        await ctx.respond(f"{ctx.author.mention} Backup created!")
 
     @tasks.loop(hours=24)
     async def scheduled_backup(self):
