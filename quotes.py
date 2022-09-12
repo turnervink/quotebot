@@ -38,31 +38,31 @@ class Quotes(commands.Cog):
         self.cooldowns[user.id] = datetime.now() + timedelta(seconds=COOLDOWN_PERIOD_SECONDS)
         self.invocations[user.id]["count"] = 0
 
-    @commands.command(name="quote")
+    @commands.slash_command(name="quote", description="Get a random quote")
     async def get_quote(self, ctx):
-        if self.user_is_in_cooldown(ctx.message.author):
-            await ctx.send(f"You're doing that too much {ctx.message.author.mention}! Try again in a bit.")
+        if self.user_is_in_cooldown(ctx.author):
+            await ctx.respond(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
             return
 
         try:
-            user_invocation_count = self.invocations[ctx.message.author.id]["count"]
-            user_last_invocation_time = self.invocations[ctx.message.author.id]["last_invocation"]
+            user_invocation_count = self.invocations[ctx.author.id]["count"]
+            user_last_invocation_time = self.invocations[ctx.author.id]["last_invocation"]
 
             if user_invocation_count == MAX_GET_QUOTE_INVOCATIONS_BEFORE_COOLDOWN and\
                     datetime.now() - user_last_invocation_time < timedelta(seconds=GET_QUOTE_PENALTY_WINDOW_SECONDS):
-                self.start_cooldown(ctx.message.author)
-                self.invocations[ctx.message.author.id]["last_invocation"] = datetime.now()
-                await ctx.send(f"You're doing that too much {ctx.message.author.mention}! Try again in a bit.")
+                self.start_cooldown(ctx.author)
+                self.invocations[ctx.author.id]["last_invocation"] = datetime.now()
+                await ctx.respond(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
                 return
             else:
                 if datetime.now() - user_last_invocation_time < timedelta(seconds=GET_QUOTE_PENALTY_WINDOW_SECONDS):
-                    self.invocations[ctx.message.author.id]["count"] = user_invocation_count + 1
+                    self.invocations[ctx.author.id]["count"] = user_invocation_count + 1
                 else:
-                    self.invocations[ctx.message.author.id]["count"] = 1
+                    self.invocations[ctx.author.id]["count"] = 1
 
-                self.invocations[ctx.message.author.id]["last_invocation"] = datetime.now()
+                self.invocations[ctx.author.id]["last_invocation"] = datetime.now()
         except KeyError:
-            self.invocations[ctx.message.author.id] = {
+            self.invocations[ctx.author.id] = {
                 "count": 1,
                 "last_invocation": datetime.now()
             }
@@ -70,15 +70,24 @@ class Quotes(commands.Cog):
         quote = self.quotes[random.choice(list(self.quotes.keys()))]
         embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
                               description=f"- {quote['author']} | {quote['date']}")
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
 
-    @commands.command(name="search")
-    async def search_for_quote(self, ctx, contents_substr: str, author: str = None):
+    @commands.slash_command(name="search", description="Search for a quote")
+    async def search_for_quote(
+            self,
+            ctx,
+            contents_substr: discord.Option(str, name="text", description="The quote text to search for", required=False, default=""),
+            author: discord.Option(str, description="The name of the quote author", required=False, default=None)
+    ):
+        if contents_substr is None and author is None:
+            await ctx.respond("You need to specify at least one of `text` or `author` in your search")
+            return
+
         quotes = []
 
         for key in self.quotes.keys():
             if author is not None:
-                if self.quotes[key]["author"].lower() == author:
+                if self.quotes[key]["author"].lower() == author.lower():
                     quotes.append(self.quotes[key])
             else:
                 quotes.append(self.quotes[key])
@@ -91,27 +100,24 @@ class Quotes(commands.Cog):
 
         embed = discord.Embed(title="Search results", colour=discord.Colour(0x9013fe),
                               description=results_list)
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
 
-    @commands.command(name="addquote")
-    async def add_quote(self, ctx, quote: str, author: str, date: str):
+    @commands.slash_command(name="addquote", description="Add a quote")
+    async def add_quote(
+            self,
+            ctx,
+            quote: discord.Option(str, description="The quote text"),
+            author: discord.Option(str, description="The author's name"),
+            date: discord.Option(str, description="The date the quote was said")
+    ):
         db.push_quote(quote, author, date)
         self.quotes = db.get_quotes()
-        await ctx.send(f"{ctx.message.author.mention} Quote added!")
-        await ctx.message.delete()
+        await ctx.respond(f"{ctx.author.mention} Quote added!")
 
-    @commands.command(name="refresh")
+    @commands.slash_command(name="refresh", description="Refresh the quotes from the database")
     async def refresh_cached_quotes(self, ctx):
         self.quotes = db.get_quotes()
-        await ctx.send("Quotes refreshed!")
-
-    @commands.command(name="help")
-    async def help(self, ctx):
-        embed = discord.Embed(title="Quote Bot Help")
-        embed.add_field(name="Get a quote:", value="`$quote`", inline=False)
-        embed.add_field(name="Add a new quote:",
-                        value="`$addquote \"Your cool quote\" \"Author Name\" \"January 1st, 1970\"`", inline=False)
-        await ctx.send(embed=embed)
+        await ctx.respond("Quotes refreshed!")
 
 
 def setup(bot: commands.Bot):
