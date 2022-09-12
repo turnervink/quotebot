@@ -76,7 +76,7 @@ class Quotes(commands.Cog):
     async def search_for_quote(
             self,
             ctx,
-            contents_substr: discord.Option(str, name="text", description="The quote text to search for", required=False, default=None),
+            contents_substr: discord.Option(str, name="text", description="The quote text to search for", required=False, default=""),
             author: discord.Option(str, description="The name of the quote author", required=False, default=None)
     ):
         if contents_substr is None and author is None:
