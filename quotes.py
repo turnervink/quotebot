@@ -40,6 +40,7 @@ class Quotes(commands.Cog):
 
     @commands.slash_command(name="quote", description="Get a random quote")
     async def get_quote(self, ctx):
+        await ctx.defer()
         if self.user_is_in_cooldown(ctx.author):
             await ctx.respond(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
             return
@@ -79,6 +80,7 @@ class Quotes(commands.Cog):
             contents_substr: discord.Option(str, name="text", description="The quote text to search for", required=False, default=""),
             author: discord.Option(str, description="The name of the quote author", required=False, default=None)
     ):
+        await ctx.defer()
         if contents_substr is None and author is None:
             await ctx.respond("You need to specify at least one of `text` or `author` in your search")
             return
@@ -110,12 +112,14 @@ class Quotes(commands.Cog):
             author: discord.Option(str, description="The author's name"),
             date: discord.Option(str, description="The date the quote was said")
     ):
+        await ctx.defer()
         db.push_quote(quote, author, date)
         self.quotes = db.get_quotes()
         await ctx.respond(f"{ctx.author.mention} Quote added!")
 
     @commands.slash_command(name="refresh", description="Refresh the quotes from the database")
     async def refresh_cached_quotes(self, ctx):
+        await ctx.defer()
         self.quotes = db.get_quotes()
         await ctx.respond("Quotes refreshed!")
 
