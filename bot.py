@@ -1,12 +1,20 @@
-import discord
-
+import json
 import os
+
+import discord
 
 import db
 import util
 
 intents = discord.Intents(messages=True, reactions=True, message_content=True)
-bot = discord.Bot(debug_guilds=[339533012725268480], intents=intents)
+
+try:
+    debug_guild_ids = json.loads(os.environ['DEBUG_GUILD_IDS'])
+    print("Starting bot with debug_guilds=" + str(debug_guild_ids))
+    bot = discord.Bot(intents=intents, debug_guilds=debug_guild_ids)
+except KeyError:
+    print("No debug_guilds specified, will create global commands")
+    bot = discord.Bot(intents=intents)
 
 
 @bot.event
@@ -28,7 +36,6 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
 async def on_ready():
     print(f"Bot ready! Logged in as {bot.user.name} - ID: {bot.user.id}")
 
-bot.load_extension("backup")
 bot.load_extension("status")
 bot.load_extension("quotes")
 bot.run(os.environ["BOT_TOKEN"])
