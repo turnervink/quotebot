@@ -5,4 +5,5 @@ __pycache__
 .envrc
 venv
 db-creds.json
+Makefile
 backup/*
