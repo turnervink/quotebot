@@ -39,10 +39,10 @@ class Quotes(commands.Cog):
         self.invocations[user.id]["count"] = 0
 
     @commands.slash_command(name="quote", description="Get a random quote")
-    async def get_quote(self, ctx):
+    async def get_quote(self, ctx: discord.ApplicationContext):
         await ctx.defer()
         if self.user_is_in_cooldown(ctx.author):
-            await ctx.respond(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
+            await ctx.followup.send(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
             return
 
         try:
@@ -53,7 +53,7 @@ class Quotes(commands.Cog):
                     datetime.now() - user_last_invocation_time < timedelta(seconds=GET_QUOTE_PENALTY_WINDOW_SECONDS):
                 self.start_cooldown(ctx.author)
                 self.invocations[ctx.author.id]["last_invocation"] = datetime.now()
-                await ctx.respond(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
+                await ctx.followup.send(f"You're doing that too much {ctx.author.mention}! Try again in a bit.")
                 return
             else:
                 if datetime.now() - user_last_invocation_time < timedelta(seconds=GET_QUOTE_PENALTY_WINDOW_SECONDS):
@@ -68,21 +68,25 @@ class Quotes(commands.Cog):
                 "last_invocation": datetime.now()
             }
 
-        quote = self.quotes[random.choice(list(self.quotes.keys()))]
-        embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
-                              description=f"- {quote['author']} | {quote['date']}")
-        await ctx.respond(embed=embed)
+        if self.quotes is not None:
+            quote = self.quotes[random.choice(list(self.quotes.keys()))]
+
+            embed = discord.Embed(title=quote["quote"], colour=discord.Colour(0x9013fe),
+                                  description=f"- {quote['author']} | {quote['date']}")
+            await ctx.followup.send(embed=embed)
+        else:
+            await ctx.followup.send("You haven't created any quotes yet! Add one with **/addquote**.")
 
     @commands.slash_command(name="search", description="Search for a quote")
     async def search_for_quote(
             self,
-            ctx,
+            ctx: discord.ApplicationContext,
             contents_substr: discord.Option(str, name="text", description="The quote text to search for", required=False, default=""),
             author: discord.Option(str, description="The name of the quote author", required=False, default=None)
     ):
         await ctx.defer()
         if contents_substr is None and author is None:
-            await ctx.respond("You need to specify at least one of `text` or `author` in your search")
+            await ctx.followup.send("You need to specify at least one of `text` or `author` in your search")
             return
 
         quotes = []
@@ -102,12 +106,12 @@ class Quotes(commands.Cog):
 
         embed = discord.Embed(title="Search results", colour=discord.Colour(0x9013fe),
                               description=results_list)
-        await ctx.respond(embed=embed)
+        await ctx.followup.send(embed=embed)
 
     @commands.slash_command(name="addquote", description="Add a quote")
     async def add_quote(
             self,
-            ctx,
+            ctx: discord.ApplicationContext,
             quote: discord.Option(str, description="The quote text"),
             author: discord.Option(str, description="The author's name"),
             date: discord.Option(str, description="The date the quote was said")
@@ -115,13 +119,13 @@ class Quotes(commands.Cog):
         await ctx.defer()
         db.push_quote(quote, author, date)
         self.quotes = db.get_quotes()
-        await ctx.respond(f"{ctx.author.mention} Quote added!")
+        await ctx.followup.send(f"{ctx.author.mention} Quote added!")
 
     @commands.slash_command(name="refresh", description="Refresh the quotes from the database")
-    async def refresh_cached_quotes(self, ctx):
+    async def refresh_cached_quotes(self, ctx: discord.ApplicationContext):
         await ctx.defer()
         self.quotes = db.get_quotes()
-        await ctx.respond("Quotes refreshed!")
+        await ctx.followup.send("Quotes refreshed!")
 
 
 def setup(bot: commands.Bot):
