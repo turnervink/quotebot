@@ -6,7 +6,7 @@ import discord
 import db
 import util
 
-intents = discord.Intents(messages=True, reactions=True, message_content=True)
+intents = discord.Intents()
 
 try:
     debug_guild_ids = json.loads(os.environ['DEBUG_GUILD_IDS'])
