@@ -3,23 +3,29 @@ Lets you store funny and weird things your friends say and retrieve them randoml
 so you can laugh at them out of context
 
 ## Development
-- Clone the repo
-- Add a file containing your Firebase service account auth info named `db-creds.json` to the root project directory
-- Build the Docker image
+- Set the following local environment variables
 ```
-docker build . -t pe-quote-bot:latest
+# The token for your Discord bot
+BOT_TOKEN=<discord bot token>
+
+# Database information for local development
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DATABASE=<postgres database name>
+POSTGRES_USERNAME=<postgres username>
+POSTGRES_PASSWORD=<postgres password>
+
+# Command cooldown values
+COOLDOWN_MAX_INVOCATIONS=<N>
+COOLDOWN_PERIOD_SECONDS=<N>
+
+# An option list of integer Discord server IDs to create the bot's commands on
+# Speeds up development by limiting how many servers need to have commands set up
+DEBUG_GUILD_IDS='[]'
 ```
-- Run the Docker image, passing in the needed arguments
-```
-docker run -v $(pwd)/db-creds.json:/etc/firebase/db-creds.json -e GOOGLE_APPLICATION_CREDENTIALS=/etc/firebase/db-creds.json -e DB_AUTH_UID=<FIREBASE AUTH UID> -e BOT_TOKEN=<DISCORD BOT TOKEN> pe-quote-bot:latest
-```
-`GOOGLE_APPLICATION_CREDENTIALS` specifies the path to the DB creds file within the Docker image    
-`DB_AUTH_UID` is the unique identifier used to authenticate requests to Firebase  
-`DB_ROOT` is the root node of the database to use (e.g. `dev` or `deploy`)  
-`BOT_TOKEN` is the Discord bot token  
-`BACKUP_DIR` is a local directory on the bot's server to back up quotes to  
-`COOLDOWN_PERIOD_SECONDS` is how long the command cooldown period should be  
-`MAX_GET_QUOTE_INVOCATIONS_BEFORE_COOLDOWN` is how many times a user can use the get quote command before being put into a cooldown  
-`GET_QUOTE_PENALTY_WINDOW_SECONDS` is the window of time that using the get quote command again will count as a usage for determining the cooldown
-(e.g if the user uses the command once, then again within this window, their usage count goes up by one)  
-`DEBUG_GUILD_IDS` is an array of integer Discord Guild IDs that the bot will create slash commands in, if this is empty commands will be created globally
+- `docker-compose -f docker-compose.local.yml up` to spin up a Postgres container that can be accessed outside of the container
+- `python3 bot.py` to start the bot
+
+## Deployment
+- Set the environment variables as needed for your production environment
+- Use `docker-compose up` to start the bot's container stack on your production machine

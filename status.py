@@ -1,7 +1,7 @@
+import os
+
 import discord
 from discord.ext import commands, tasks
-
-import random
 
 import db
 
@@ -9,18 +9,22 @@ import db
 class Status(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.quotes = db.get_quotes()
+        self.postgres = db.Postgres(
+            os.environ["POSTGRES_HOST"],
+            os.environ["POSTGRES_PORT"],
+            os.environ["POSTGRES_DATABASE"],
+            os.environ["POSTGRES_USERNAME"],
+            os.environ["POSTGRES_PASSWORD"]
+        )
         self.update_status.start()
 
     @tasks.loop(hours=6)
     async def update_status(self):
-        self.quotes = db.get_quotes()
+        random_quote = self.postgres.get_random_quote()
 
-        if self.quotes is not None:
-            quote = self.quotes[random.choice(list(self.quotes.keys()))]
-
-            text = quote["quote"]
-            author = quote["author"]
+        if random_quote is not None:
+            text = random_quote["quote"]
+            author = random_quote["author"]
             await self.bot.change_presence(activity=discord.Game(name=f"\"{text}\" - {author}"))
 
     @update_status.before_loop

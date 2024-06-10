@@ -1,0 +1,31 @@
+services:
+  bot:
+    image: quotebot
+    depends_on:
+      db:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: postgres
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      COOLDOWN_MAX_INVOCATIONS: ${COOLDOWN_MAX_INVOCATIONS}
+      COOLDOWN_PERIOD_SECONDS: ${COOLDOWN_PERIOD_SECONDS}
+
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
