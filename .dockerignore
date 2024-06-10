@@ -1,6 +1,9 @@
 .DS_Store
-*.env
+.vscode
+
 .envrc
-db-creds.json
+
 venv
-backup/*
+__pycache__
+
+pgdata

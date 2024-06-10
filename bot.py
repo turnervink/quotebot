@@ -1,10 +1,10 @@
 import json
 import os
 
-import discord
-
-import db
 import util
+
+import discord
+from discord.ext import commands
 
 intents = discord.Intents()
 
@@ -18,18 +18,9 @@ except KeyError:
 
 
 @bot.event
-async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    if str(payload.emoji) == "📇":
-        channel = await bot.fetch_channel(payload.channel_id)
-        message: discord.Message = await channel.fetch_message(payload.message_id)
-        author = db.get_author(message.author)
-        message_date_str = util.get_quote_date(message)
-
-        if author is None:
-            author = message.author.name
-
-        db.add_quote(str(message.id), message.content, author, message_date_str)
-        await channel.send(f"{payload.member.mention} Quote added!")
+async def on_application_command_error(ctx: discord.ApplicationContext, error: discord.DiscordException):
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.respond(f"You're doing that too much! Try again in {util.humanize_cooldown(error.retry_after)}.")
 
 
 @bot.event
