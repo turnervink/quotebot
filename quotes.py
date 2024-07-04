@@ -29,16 +29,19 @@ class Quotes(commands.Cog):
     @commands.slash_command(name="quote", description="Get a random quote")
     @commands.cooldown(COOLDOWN_MAX_INVOCATIONS, COOLDOWN_PERIOD_SECONDS, commands.BucketType.user)
     async def get_quote(self, ctx: discord.ApplicationContext):
-        quote = self.postgres.get_random_quote()
+        try:
+            quote = self.postgres.get_random_quote(server_id=ctx.guild.id)
 
-        if quote is None:
-            await ctx.respond("No quotes found")
-            return
+            if quote is None:
+                await ctx.respond("No quotes found")
+                return
 
-        embed = util.build_quote_embed(
-            quote["quote"], quote["author"], quote["freeform_date"])
-
-        await ctx.respond(embed=embed)
+            embed = util.build_quote_embed(
+                quote["quote"], quote["author"], quote["freeform_date"])
+            await ctx.respond(embed=embed)
+        except Exception as e:
+            print(e)
+            await ctx.respond('An error occurred while fetching the quote')
 
     @commands.slash_command(name="addquote", description="Add a quote")
     async def add_quote(
@@ -49,8 +52,14 @@ class Quotes(commands.Cog):
             date: discord.Option(
                 str, description="The date the quote was said")
     ):
-        self.postgres.add_quote(quote, author, date)
-        await ctx.respond("Quote added!")
+        try:
+            self.postgres.add_quote(
+                server_id=ctx.guild.id, quote=quote, author=author, freeform_date=date)
+            
+            await ctx.respond("Quote added!")
+        except Exception as e:
+            print(e)
+            await ctx.respond('An error occurred while adding the quote')
 
     @commands.slash_command(name="search", description="Search for a quote")
     async def search_quotes(
@@ -60,30 +69,35 @@ class Quotes(commands.Cog):
         author: discord.Option(
             str, description="The name of the quote author", required=False, default=None)
     ):
-        total_matches = self.postgres.get_total_search_matches(
-            search_term, author
-        )
+        try:
+            total_matches = self.postgres.get_total_search_matches(
+                server_id=ctx.guild.id, search_term=search_term, author=author
+            )
 
-        if total_matches == 0:
-            await ctx.respond("No quotes found")
-            return
+            if total_matches == 0:
+                await ctx.respond("No quotes found")
+                return
 
-        total_pages = (total_matches // db.PAGE_SIZE) + 1
+            total_pages = (total_matches // db.PAGE_SIZE) + 1
 
-        quote_pages = []
-        for page in range(1, total_pages + 1):
-            quotes = self.postgres.search_quotes(search_term, author, page)
+            quote_pages = []
+            for page in range(1, total_pages + 1):
+                quotes = self.postgres.search_quotes(
+                    server_id=ctx.guild.id, search_term=search_term, author=author, page=page)
 
-            embed = discord.Embed(colour=discord.Colour(util.EMBED_COLOUR))
-            for quote in quotes:
-                embed.add_field(
-                    name=quote["quote"], value=f"{quote['author']} | {quote['freeform_date']}", inline=False
-                )
+                embed = discord.Embed(colour=discord.Colour(util.EMBED_COLOUR))
+                for quote in quotes:
+                    embed.add_field(
+                        name=quote["quote"], value=f"{quote['author']} | {quote['freeform_date']}", inline=False
+                    )
 
-            quote_pages.append(Page(embeds=[embed]))
+                quote_pages.append(Page(embeds=[embed]))
 
-        quotes_paginator = Paginator(quote_pages)
-        await quotes_paginator.respond(ctx.interaction)
+            quotes_paginator = Paginator(quote_pages)
+            await quotes_paginator.respond(ctx.interaction)
+        except Exception as e:
+            print(e)
+            await ctx.respond('An error occurred while searching for quotes')
 
 
 def setup(bot: commands.Bot):
