@@ -4,7 +4,6 @@
 *.env
 .envrc
 
-venv
 __pycache__
 
 pgdata
