@@ -14,5 +14,5 @@ run:
 build-production:
 	docker build --platform linux/arm64 -t {{docker-repo}}/{{image-name}}:{{image-tag}} .
 
-publish:
+publish: build-production
 	docker push {{docker-repo}}/{{image-name}}:{{image-tag}}
