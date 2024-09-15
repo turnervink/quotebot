@@ -26,8 +26,8 @@ DEBUG_GUILD_IDS='[]'
 - Create the `pgdata` directory in the repo directory
 - `docker-compose -f docker-compose.local.yml up` to spin up a Postgres container that can be accessed outside of the container
 - Install dependencies with `poetry install`
-- `python bot.py` to start the bot
+- `poetry run python src/bot.py` to start the bot
 
 ## Deployment
-- Set the environment variables as needed for your production environment
-- Use `docker-compose up` to start the bot's container stack on your production machine
+- Create a `.env` file and set the environment variables as needed for your production environment
+- Use `docker compose up` to start the bot's container stack on your production machine
