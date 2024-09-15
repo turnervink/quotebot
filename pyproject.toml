@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "quotebot"
+version = "1.0.0"
+description = ""
+authors = ["Turner Vink <turner.vink@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+py-cord = "^2.6.0"
+psycopg2-binary = "^2.9.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
