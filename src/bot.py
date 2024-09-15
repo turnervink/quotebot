@@ -25,7 +25,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error: d
 
 @bot.event
 async def on_ready():
-    print(f"Bot ready! Logged in as {bot.user.name} - ID: {bot.user.id}")
+    print(f"Bot ready! Logged in as {bot.user.name} - ID: {bot.user.id}.")
 
 # bot.load_extension("status")
 bot.load_extension("quotes")

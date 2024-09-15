@@ -15,4 +15,4 @@ stop-db:
 	docker compose -f docker-compose.local.yml down
 
 start-dev:
-	poetry run python bot.py
+	poetry run python src/bot.py
