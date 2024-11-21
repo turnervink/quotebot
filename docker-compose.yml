@@ -18,7 +18,7 @@ services:
       COOLDOWN_PERIOD_SECONDS: ${COOLDOWN_PERIOD_SECONDS}
 
   db:
-    image: postgres:alpine
+    image: postgres:16.5-alpine
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
